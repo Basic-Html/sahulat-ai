@@ -1,12 +1,24 @@
 {
-    "routes": [
+    "rewrites": [
         {
-            "src": "/api/(.*)",
-            "dest": "api/index.py"
+            "source": "/orchestrate",
+            "destination": "/api/index.py"
         },
         {
-            "src": "/(.*)",
-            "dest": "frontend/$1"
+            "source": "/book-service",
+            "destination": "/api/index.py"
+        },
+        {
+            "source": "/update-status",
+            "destination": "/api/index.py"
+        },
+        {
+            "source": "/providers",
+            "destination": "/api/index.py"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }

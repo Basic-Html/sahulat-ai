@@ -3,11 +3,14 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from backend.main import app
 from fastapi.staticfiles import StaticFiles
+from backend.main import app
 
-# Mount frontend
 frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
-app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+
+try:
+    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+except:
+    pass
 
 handler = app

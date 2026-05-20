@@ -1,0 +1,9 @@
+{
+  "name": "Khidmat.ai",
+  "short_name": "Khidmat",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#00e5a0",
+  "icons": []
+}

@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Sahulat.ai — Service Orchestrator</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#00e5a0">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a26;
+            --border: #2a2a3a;
+            --accent: #00e5a0;
+            --accent2: #7c6af7;
+            --text: #f0f0f5;
+            --muted: #6b6b80;
+            --danger: #ff4d6d;
+            --warn: #ffd166;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 24px 20px 60px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 40px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .badge-online {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(0, 229, 160, 0.08);
+            border: 1px solid rgba(0, 229, 160, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+        }
+
+        /* Hero */
+        .hero {
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: clamp(24px, 4vw, 38px);
+            font-weight: 600;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+
+        .hero h1 em {
+            font-style: normal;
+            color: var(--accent);
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 28px;
+            font-weight: 400;
+        }
+
+        /* Search */
+        .search-wrap {
+            display: flex;
+            gap: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 6px 6px 6px 20px;
+            transition: border-color 0.2s;
+        }
+
+        .search-wrap:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 229, 160, 0.08);
+        }
+
+        .search-wrap input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            padding: 10px 0;
+        }
+
+        .search-wrap input::placeholder {
+            color: var(--muted);
+        }
+
+        .search-wrap button {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .search-wrap button:hover {
+            background: #00ffa8;
+            transform: translateY(-1px);
+        }
+
+        .search-wrap button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Chips */
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .chip {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .chip:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Pipeline */
+        .pipeline {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .pipeline.visible {
+            display: flex;
+        }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            animation: slideIn 0.3s ease both;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step.active {
+            border-color: var(--accent);
+        }
+
+        .step.done {
+            border-color: var(--border);
+        }
+
+        .step.error {
+            border-color: var(--danger);
+        }
+
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+
+        .step.active .step-icon {
+            background: rgba(0, 229, 160, 0.15);
+            color: var(--accent);
+        }
+
+        .step.done .step-icon {
+            background: rgba(0, 229, 160, 0.08);
+            color: var(--accent);
+        }
+
+        .step.pending .step-icon {
+            background: var(--surface2);
+            color: var(--muted);
+        }
+
+        .step-body {
+            flex: 1;
+        }
+
+        .step-label {
+            font-size: 11px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .step-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .step-detail {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* Providers */
+        .section-title {
+            font-size: 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .providers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .provider-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .provider-card:first-child {
+            border-color: var(--accent);
+        }
+
+        .provider-card:first-child::before {
+            content: 'BEST MATCH';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            color: #000;
+            background: var(--accent);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .provider-name {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .provider-area {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            margin-bottom: 14px;
+        }
+
+        .provider-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-val {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .score-bar {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        .provider-reasoning {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .slot-list {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .slot {
+            font-size: 11px;
+            font-family: 'IBM Plex Mono', monospace;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .slot:hover,
+        .slot.selected {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 229, 160, 0.08);
+        }
+
+        .book-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .book-btn:hover {
+            background: #00ffa8;
+        }
+
+        .book-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Booking confirmation */
+        .booking-confirm {
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            display: none;
+            animation: slideIn 0.3s ease both;
+        }
+
+        .booking-confirm.visible {
+            display: block;
+        }
+
+        .confirm-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .confirm-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 229, 160, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .confirm-id {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .confirm-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .confirm-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .confirm-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .confirm-item {
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .confirm-item-label {
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .confirm-item-val {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .reminder-badge {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(124, 106, 247, 0.1);
+            border: 1px solid rgba(124, 106, 247, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--accent2);
+        }
+
+        /* status piepline */
+        .status-pipeline {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+
+        .status-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+
+        .status-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .status-step {
+            text-align: center;
+            flex: 1;
+        }
+
+        .status-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #333;
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 8px;
+            transition: all 0.3s ease;
+        }
+
+        .status-step.done .status-dot {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .status-step.pending .status-dot {
+            border: 2px solid var(--border);
+        }
+
+        .status-step-label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .status-line {
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+            margin: 0 4px;
+            transition: all 0.3s ease;
+        }
+
+        .status-line.done {
+            background: var(--accent);
+        }
+
+        .simulate-btn {
+            width: 100%;
+            padding: 10px;
+            background: #00ffa8;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+
+        .simulate-btn:hover {
+            background: #00ffcc;
+        }
+
+        /* Logs */
+        .logs-section {
+            margin-top: 8px;
+        }
+
+        .logs-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .logs-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .logs-box {
+            background: #08080f;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            line-height: 1.8;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .logs-box.open {
+            display: block;
+        }
+
+        .log-line {
+            color: var(--muted);
+        }
+
+        .log-line.intent {
+            color: #7ec8e3;
+        }
+
+        .log-line.discovery {
+            color: #ffd166;
+        }
+
+        .log-line.ranking {
+            color: var(--accent2);
+        }
+
+        .log-line.booking {
+            color: var(--accent);
+        }
+
+        .log-line.followup {
+            color: #ff9f1c;
+        }
+
+        /* Empty state */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .empty-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .empty p {
+            font-size: 14px;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+        }
+
+        .loading.visible {
+            display: flex;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            color: var(--text);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: 'IBM Plex Mono', monospace;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Map */
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 32px;
+            background: var(--surface);
+            z-index: 1;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: var(--surface) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border);
+            font-family: 'DM Sans', sans-serif;
+            border-radius: 8px;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--surface) !important;
+            border: 1px solid var(--border);
+        }
+
+        .popup-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: var(--accent);
+        }
+
+        .popup-info {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* User Marker Pulse */
+        .user-marker-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-marker-pulse {
+            width: 12px;
+            height: 12px;
+            background: var(--accent2);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .user-marker-pulse::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--accent2);
+            border-radius: 50%;
+            animation: marker-pulse 2s infinite;
+        }
+
+        @keyframes marker-pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        /* Light theme */
+        body.light {
+            --bg: #f5f5f0;
+            --surface: #ffffff;
+            --surface2: #ebebeb;
+            --border: #d5d5d5;
+            --text: #111118;
+            --muted: #888899;
+            --accent: #00a372;
+            /* ADD THIS - darker green for light mode */
+            --accent2: #5b4fd4;
+            /* ADD THIS - darker purple for light mode */
+        }
+
+        body.light .chip {
+            color: #333344;
+            border-color: #c0c0d0;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .booking-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .booking-modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .bm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .bm-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .bm-subtitle {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .bm-close {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .bm-bio {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: var(--surface2);
+            border-radius: 8px;
+        }
+
+        .bm-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .bm-stat {
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .bm-stat-val {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .bm-stat-label {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .bm-section-label {
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .bm-slots {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .bm-slot {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: var(--text);
+        }
+
+        .bm-slot:hover,
+        .bm-slot.selected {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 229, 160, 0.08);
+        }
+
+        .bm-contact {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .bm-confirm-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bm-confirm-btn:hover {
+            background: #00ffa8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+
+
+        <header>
+            <div class="logo">Sahulat<span>.ai</span></div>
+            <div style="display:flex;align-items:center;gap:12px">
+                <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+
+            </div>
+        </header>
+
+
+        <section class="hero">
+            <h1>Find trusted services<br>in <em>Islamabad</em></h1>
+            <p>Type your request in English, Urdu, or Roman Urdu — AI agents handle the rest</p>
+
+            <div class="search-wrap">
+                <input type="text" id="userInput" placeholder='e.g. "G-13 mein AC technician chahiye kal subah"'
+                    autocomplete="off">
+                <button id="searchBtn" onclick="runOrchestration()">Find →</button>
+            </div>
+
+            <div class="chips">
+                <div class="chip" onclick="fillInput('G-13 mein AC technician chahiye kal subah')">🌀 AC Technician
+                </div>
+                <div class="chip" onclick="fillInput('I need a plumber in F-7 today')">🔧 Plumber</div>
+                <div class="chip" onclick="fillInput('F-10 mein electrician chahiye')">⚡ Electrician</div>
+                <div class="chip" onclick="fillInput('Mujhe G-11 mein tutor chahiye sham ko')">📚 Tutor</div>
+                <div class="chip" onclick="fillInput('Beautician chahiye G-9 mein')">💄 Beautician</div>
+            </div>
+        </section>
+
+        <!-- Pipeline steps -->
+        <div class="pipeline" id="pipeline">
+            <div class="step pending" id="step1">
+                <div class="step-icon">01</div>
+                <div class="step-body">
+                    <div class="step-label">Intent Agent</div>
+                    <div class="step-title">Parsing your request...</div>
+                    <div class="step-detail" id="step1detail"></div>
+                </div>
+            </div>
+            <div class="step pending" id="step2">
+                <div class="step-icon">02</div>
+                <div class="step-body">
+                    <div class="step-label">Discovery Agent</div>
+                    <div class="step-title">Finding providers...</div>
+                    <div class="step-detail" id="step2detail"></div>
+                </div>
+            </div>
+            <div class="step pending" id="step3">
+                <div class="step-icon">03</div>
+                <div class="step-body">
+                    <div class="step-label">Ranking Agent</div>
+                    <div class="step-title">Scoring matches...</div>
+                    <div class="step-detail" id="step3detail"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span id="loadingText">Agents working...</span>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsArea" style="display:none">
+
+            <div class="section-title" id="resultsTitle">Recommended Providers</div>
+            <div class="providers-grid" id="providersGrid"></div>
+
+            <div class="section-title">Service Coverage Map</div>
+            <div id="map"></div>
+
+            <!-- Booking confirmation -->
+            <div class="booking-confirm" id="bookingConfirm">
+                <div class="confirm-header">
+                    <div class="confirm-icon">✓</div>
+                    <div>
+                        <div class="confirm-id" id="confirmId"></div>
+                        <div class="confirm-title">Booking Confirmed</div>
+                    </div>
+                </div>
+                <div class="confirm-grid" id="confirmGrid"></div>
+                <div class="reminder-badge" id="reminderBadge"></div>
+                <div class="status-pipeline" id="statusPipeline" style="display:none">
+                    <div class="status-title">Booking Progress</div>
+                    <div class="status-steps">
+                        <div class="status-step done" id="ss1">
+                            <div class="status-dot">✓</div>
+                            <div class="status-step-label">Confirmed</div>
+                        </div>
+                        <div class="status-line" id="sl1"></div>
+                        <div class="status-step pending" id="ss2">
+                            <div class="status-dot">2</div>
+                            <div class="status-step-label">Provider Notified</div>
+                        </div>
+                        <div class="status-line" id="sl2"></div>
+                        <div class="status-step pending" id="ss3">
+                            <div class="status-dot">3</div>
+                            <div class="status-step-label">En Route</div>
+                        </div>
+                        <div class="status-line" id="sl3"></div>
+                        <div class="status-step pending" id="ss4">
+                            <div class="status-dot">4</div>
+                            <div class="status-step-label">Completed</div>
+                        </div>
+                    </div>
+                    <button class="simulate-btn" onclick="simulateProgress()">
+                        ▶ Simulate Progress
+                    </button>
+                </div>
+            </div>
+
+            <!-- Logs -->
+            <div class="logs-section">
+                <button class="logs-toggle" onclick="toggleLogs()">▶ Show Agent Logs</button>
+                <div class="logs-box" id="logsBox"></div>
+            </div>
+
+        </div>
+
+        <div id="emptyState" class="empty">
+            <div class="empty-icon">🤖</div>
+            <p>Enter a service request above to start the AI orchestration</p>
+        </div>
+
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API = 'http://192.168.0.106:8000';
+        let allLogs = [];
+        let selectedSlots = {};
+        let map, markers = [];
+
+        function initMap() {
+            if (map) return;
+            map = L.map('map').setView([33.6493, 72.9692], 13);
+            const isDark = !document.body.classList.contains('light');
+            const tileUrl = isDark
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+            L.tileLayer(tileUrl, {
+                attribution: '© OpenStreetMap © CARTO',
+                maxZoom: 18
+            }).addTo(map);
+        }
+
+        function updateMap(providers, userArea) {
+            initMap();
+            // Clear previous markers and route lines
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            if (window.routeLine) map.removeLayer(window.routeLine);
+
+            const areaCoords = {
+                'G-13': [33.6493, 72.9692],
+                'F-7': [33.7200, 73.0500],
+                'I-8': [33.6680, 73.0750],
+                'G-11': [33.6670, 72.9970],
+                'F-6': [33.7290, 73.0740],
+                'E-7': [33.7310, 73.0410],
+                'H-13': [33.6350, 72.9550],
+                'G-9': [33.6840, 73.0300],
+                'F-10': [33.7000, 73.0000],
+                'F-11': [33.6900, 72.9800],
+                'G-8': [33.6950, 73.0450],
+                'I-9': [33.6550, 73.0600]
+            };
+
+            const userPos = areaCoords[userArea] || areaCoords['G-13'];
+
+            // Add user location marker (pulsing blue)
+            const userIcon = L.divIcon({
+                className: 'user-marker-container',
+                html: '<div class="user-marker-pulse"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+            const userMarker = L.marker(userPos, { icon: userIcon }).addTo(map);
+            userMarker.bindPopup(`Your Location: ${userArea || 'G-13'}`);
+            markers.push(userMarker);
+
+            providers.forEach((p, i) => {
+                const color = (i === 0) ? '#00e5a0' : '#6b6b80';
+                const marker = L.circleMarker([p.lat, p.long], {
+                    radius: 8,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                const popupContent = `
+                    <div class="popup-title">${p.name} (${p.area})</div>
+                    <div class="popup-info">
+                        ⭐ ${p.rating} Rating<br>
+                        📍 ${p.distance_from_g13_km}km distance
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+
+                // Draw line from user to best match
+                if (i === 0) {
+                    window.routeLine = L.polyline([userPos, [p.lat, p.long]], {
+                        color: '#00e5a0',
+                        weight: 2,
+                        dashArray: '5, 10',
+                        opacity: 0.6
+                    }).addTo(map);
+                }
+            });
+
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.3));
+            }
+        }
+
+        function fillInput(text) {
+            document.getElementById('userInput').value = text;
+            document.getElementById('userInput').focus();
+        }
+
+        function toggleLogs() {
+            const box = document.getElementById('logsBox');
+            const btn = document.querySelector('.logs-toggle');
+            box.classList.toggle('open');
+            btn.textContent = box.classList.contains('open') ? '▼ Hide Agent Logs' : '▶ Show Agent Logs';
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function setStep(id, state, detail) {
+            const el = document.getElementById(id);
+            el.className = 'step ' + state;
+            if (detail) document.getElementById(id + 'detail').textContent = detail;
+        }
+
+        function renderLogs(logs) {
+            const box = document.getElementById('logsBox');
+            box.innerHTML = logs.map(l => {
+                let cls = 'log-line';
+                if (l.includes('INTENT')) cls += ' intent';
+                else if (l.includes('DISCOVERY')) cls += ' discovery';
+                else if (l.includes('RANKING')) cls += ' ranking';
+                else if (l.includes('BOOKING')) cls += ' booking';
+                else if (l.includes('FOLLOWUP')) cls += ' followup';
+                return `<div class="${cls}">${l}</div>`;
+            }).join('');
+        }
+
+        async function runOrchestration() {
+            const input = document.getElementById('userInput').value.trim();
+            if (!input) { showToast('Please enter a request'); return; }
+
+            // Reset UI
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('resultsArea').style.display = 'none';
+            document.getElementById('bookingConfirm').classList.remove('visible');
+            document.getElementById('pipeline').classList.add('visible');
+            document.getElementById('loading').classList.add('visible');
+            document.getElementById('searchBtn').disabled = true;
+            allLogs = [
+                "[WORKPLAN] Task: Find and book a service provider for user request",
+                "[WORKPLAN] Step 1: Parse user intent from natural language",
+                "[WORKPLAN] Step 2: Discover matching providers from dataset",
+                "[WORKPLAN] Step 3: Rank providers using weighted scoring",
+                "[WORKPLAN] Step 4: Simulate booking and write to database",
+                "[WORKPLAN] Step 5: Schedule follow-up reminder",
+                "[WORKPLAN] Executing pipeline..."
+            ];
+            renderLogs(allLogs);
+
+            setStep('step1', 'active', '');
+            setStep('step2', 'pending', '');
+            setStep('step3', 'pending', '');
+            document.getElementById('loadingText').textContent = 'Intent Agent parsing request...';
+
+            try {
+                const res = await fetch(`${API}/orchestrate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_input: input })
+                });
+
+                const data = await res.json();
+                allLogs = data.logs || [];
+
+                if (!data.success) {
+                    setStep('step1', 'error', data.message);
+                    document.getElementById('loading').classList.remove('visible');
+                    document.getElementById('searchBtn').disabled = false;
+                    showToast('Could not process request: ' + data.message);
+                    return;
+                }
+
+                const intent = data.intent;
+                setStep('step1', 'done',
+                    `${intent.language} detected · Service: ${intent.service_type} · Location: ${intent.location} · Time: ${intent.time}`);
+
+                document.getElementById('loadingText').textContent = 'Discovery Agent finding providers...';
+                setStep('step2', 'active', '');
+
+                await new Promise(r => setTimeout(r, 400));
+
+                const providers = data.providers;
+                setStep('step2', 'done', `Found ${providers.length} providers for ${intent.service_type}`);
+
+                document.getElementById('loadingText').textContent = 'Ranking Agent scoring matches...';
+                setStep('step3', 'active', '');
+
+                await new Promise(r => setTimeout(r, 400));
+
+                setStep('step3', 'done',
+                    `Ranked by distance (40%) + rating (40%) + availability (20%)`);
+
+                document.getElementById('loading').classList.remove('visible');
+                document.getElementById('searchBtn').disabled = false;
+
+                // Render providers
+                const title = document.getElementById('resultsTitle');
+                title.textContent = `${providers.length} ${intent.service_type}s found near ${intent.location}`;
+
+                const grid = document.getElementById('providersGrid');
+                grid.innerHTML = providers.slice(0, 3).map((p, i) => {
+                    const maxScore = providers[0].score;
+                    const pct = Math.round((p.score / maxScore) * 100);
+                    const slots = p.available_slots.map(s =>
+                        `<div class="slot" onclick="selectSlot(this, '${p.id}', '${s}')">${s}</div>`
+                    ).join('');
+                    return `
+        <div class="provider-card">
+          <div class="provider-name">${p.name}</div>
+<div class="provider-area">📍 ${p.area}, Islamabad · ${p.experience_years || 5} yrs exp · ${p.jobs_completed || 100}+ jobs</div>          <div class="provider-stats">
+            <div class="stat">
+              <div class="stat-val">${p.rating}★</div>
+              <div class="stat-label">Rating</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">${p.distance_from_g13_km}km</div>
+              <div class="stat-label">Distance</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">PKR ${p.price_per_hour}</div>
+              <div class="stat-label">Per hour</div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <div class="score-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="provider-reasoning">${p.reasoning}</div>
+          <div class="slot-list">${slots}</div>
+          <button class="book-btn" id="bookBtn${p.id}"
+            onclick="bookProvider(${JSON.stringify(p).replace(/"/g, '&quot;')}, '${p.id}')">
+            Book ${p.name.split(' ')[0]}
+          </button>
+        </div>
+      `;
+                }).join('');
+
+                renderLogs(allLogs);
+                document.getElementById('resultsArea').style.display = 'block';
+
+                // Update map markers
+                setTimeout(() => {
+                    updateMap(providers, intent.location);
+                }, 100);
+
+            } catch (err) {
+                document.getElementById('loading').classList.remove('visible');
+                document.getElementById('searchBtn').disabled = false;
+                showToast('Connection error — is the server running?');
+                console.error(err);
+            }
+        }
+
+        function selectSlot(el, providerId, slot) {
+            // Deselect others in same card
+            el.closest('.slot-list').querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedSlots[providerId] = slot;
+        }
+
+        async function bookProvider(provider, providerId) {
+            // Show custom modal instead of browser confirm
+            const slot = selectedSlots[providerId] || provider.available_slots[0];
+
+            // Create modal HTML
+            const modalHtml = `
+    <div class="booking-modal-overlay" id="bookingModal" onclick="closeBookingModal(event)">
+      <div class="booking-modal-box">
+        <div class="bm-header">
+          <div>
+            <div class="bm-title">${provider.name}</div>
+            <div class="bm-subtitle">📍 ${provider.area}, Islamabad · ${provider.experience_years || 5} yrs experience</div>
+          </div>
+          <button class="bm-close" onclick="document.getElementById('bookingModal').remove()">✕</button>
+        </div>
+        
+        <div class="bm-bio">${provider.bio || 'Experienced professional available for service.'}</div>
+        
+        <div class="bm-stats">
+          <div class="bm-stat">
+            <div class="bm-stat-val">${provider.rating}★</div>
+            <div class="bm-stat-label">Rating</div>
+          </div>
+          <div class="bm-stat">
+            <div class="bm-stat-val">${provider.jobs_completed || 100}+</div>
+            <div class="bm-stat-label">Jobs Done</div>
+          </div>
+          <div class="bm-stat">
+            <div class="bm-stat-val">${provider.experience_years || 5} yrs</div>
+            <div class="bm-stat-label">Experience</div>
+          </div>
+          <div class="bm-stat">
+            <div class="bm-stat-val">PKR ${provider.price_per_hour}</div>
+            <div class="bm-stat-label">Per Hour</div>
+          </div>
+        </div>
+
+        <div class="bm-section-label">Select Time Slot</div>
+        <div class="bm-slots" id="modalSlots">
+          ${provider.available_slots.map(s => `
+            <div class="bm-slot ${s === slot ? 'selected' : ''}" 
+              onclick="selectModalSlot(this, '${s}')">${s}</div>
+          `).join('')}
+        </div>
+        
+        <div class="bm-section-label">Reminder</div>
+<div class="bm-slots" id="reminderSlots">
+  <div class="bm-slot" onclick="selectReminder(this, 30)">30 min before</div>
+  <div class="bm-slot selected" onclick="selectReminder(this, 60)">1 hour before</div>
+  <div class="bm-slot" onclick="selectReminder(this, 120)">2 hours before</div>
+</div>
+
+
+        <div class="bm-section-label">Contact</div>
+        <div class="bm-contact">${provider.phone}</div>
+
+        <button class="bm-confirm-btn" onclick="confirmBookingFromModal(${JSON.stringify(provider).replace(/"/g, '&quot;')}, '${providerId}')">
+          Confirm Booking
+        </button>
+      </div>
+    </div>
+  `;
+
+            // Remove existing modal if any
+            const existing = document.getElementById('bookingModal');
+            if (existing) existing.remove();
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Set selected slot
+            window._modalSelectedSlot = slot;
+        }
+
+        function selectModalSlot(el, slot) {
+            document.querySelectorAll('.bm-slot').forEach(s => s.classList.remove('selected'));
+            el.classList.add('selected');
+            window._modalSelectedSlot = slot;
+        }
+
+        function closeBookingModal(event) {
+            if (event.target.id === 'bookingModal') {
+                document.getElementById('bookingModal').remove();
+            }
+        }
+
+        async function confirmBookingFromModal(provider, providerId) {
+            const slot = window._modalSelectedSlot || provider.available_slots[0];
+            document.getElementById('bookingModal').remove();
+
+            const btn = document.getElementById('bookBtn' + providerId);
+            if (btn) { btn.disabled = true; btn.textContent = 'Booking...'; }
+
+            try {
+                const res = await fetch(`${API}/book-service`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: provider,
+                        time_slot: slot,
+                        service_type: provider.service_type,
+                        reminder_minutes: window._reminderMinutes || 60
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    const b = data.booking;
+                    allLogs = [...allLogs, ...data.logs];
+                    renderLogs(allLogs);
+
+                    document.getElementById('confirmId').textContent = b.booking_id;
+                    document.getElementById('confirmGrid').innerHTML = `
+        <div class="confirm-item">
+          <div class="confirm-item-label">Provider</div>
+          <div class="confirm-item-val">${b.provider_name}</div>
+        </div>
+        <div class="confirm-item">
+          <div class="confirm-item-label">Service</div>
+          <div class="confirm-item-val">${b.service_type}</div>
+        </div>
+        <div class="confirm-item">
+          <div class="confirm-item-label">Slot</div>
+          <div class="confirm-item-val">${b.slot}</div>
+        </div>
+        <div class="confirm-item">
+          <div class="confirm-item-label">Contact</div>
+          <div class="confirm-item-val">${b.provider_phone}</div>
+        </div>
+        <div class="confirm-item">
+          <div class="confirm-item-label">Rate</div>
+          <div class="confirm-item-val">PKR ${b.price_per_hour}/hr</div>
+        </div>
+        <div class="confirm-item">
+          <div class="confirm-item-label">Status</div>
+          <div class="confirm-item-val" style="color:var(--accent)">✓ Confirmed</div>
+        </div>
+      `;
+
+                    const reminderMins = window._reminderMinutes || 60;
+                    const reminderLabel = reminderMins === 30 ? '30 minutes' : reminderMins === 120 ? '2 hours' : '1 hour';
+                    document.getElementById('reminderBadge').textContent =
+                        `🔔 Reminder scheduled at ${data.reminder} — ${reminderLabel} before your appointment`;
+
+                    document.getElementById('bookingConfirm').classList.add('visible');
+                    document.getElementById('bookingConfirm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    showToast('Booking confirmed! ' + b.booking_id);
+
+                    currentBookingId = b.booking_id;
+                    document.getElementById('statusPipeline').style.display = 'block';
+
+                    if (btn) {
+                        btn.textContent = '✓ Booked';
+                        btn.style.background = 'rgba(0,229,160,0.15)';
+                        btn.style.color = 'var(--accent)';
+                    }
+                }
+            } catch (err) {
+                if (btn) { btn.disabled = false; btn.textContent = 'Book ' + provider.name.split(' ')[0]; }
+                showToast('Booking failed — try again');
+            }
+        }
+
+        document.getElementById('userInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') runOrchestration();
+        });
+
+        let currentBookingId = null;
+
+        async function simulateProgress() {
+            const statuses = ['provider_notified', 'en_route', 'completed'];
+            const stepIds = ['ss2', 'ss3', 'ss4'];
+            const lineIds = ['sl1', 'sl2', 'sl3'];
+            const btn = document.querySelector('.simulate-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Simulating...';
+
+            for (let i = 0; i < statuses.length; i++) {
+                await new Promise(r => setTimeout(r, 1500));
+
+                try {
+                    const res = await fetch(`${API}/update-status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            booking_id: currentBookingId,
+                            status: statuses[i]
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.logs) {
+                        allLogs = [...allLogs, ...data.logs];
+                        renderLogs(allLogs);
+                    }
+                } catch (e) {
+                    console.error('Status update error:', e);
+                }
+
+                document.getElementById(lineIds[i]).classList.add('active');
+                const step = document.getElementById(stepIds[i]);
+                step.className = 'status-step done';
+                step.querySelector('.status-dot').textContent = '✓';
+
+                if (statuses[i] === 'completed') {
+                    showToast('✓ Service completed successfully!');
+                } else {
+                    showToast('Updated: ' + statuses[i].replace('_', ' '));
+                }
+            }
+
+            btn.textContent = '✓ Simulation Complete';
+        }
+
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light');
+            const btn = document.getElementById('themeBtn');
+            btn.textContent = isLight ? '🌙' : '☀️';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
+        // Apply saved theme on load
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light');
+            document.getElementById('themeBtn').textContent = '🌙';
+        }
+
+        window._reminderMinutes = 60;
+
+        function selectReminder(el, minutes) {
+            document.querySelectorAll('#reminderSlots .bm-slot').forEach(s => s.classList.remove('selected'));
+            el.classList.add('selected');
+            window._reminderMinutes = minutes;
+        }
+
+    </script>
+</body>
+
+</html>

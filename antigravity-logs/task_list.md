@@ -1,0 +1,24 @@
+# Sahulat.ai Tasks
+
+- [x] Project scaffolding and setup (FastAPI, Leaflet.js frontend)
+- [x] **Agent 1: Intent Agent**
+  - [x] Implement keyword-based NLP logic
+  - [x] Implement Gemini API fallback
+  - [x] Setup multilingual vocabularies (English, Urdu, Roman Urdu)
+- [x] **Agent 2: Discovery Agent**
+  - [x] Implement provider filtering
+  - [x] Add graceful fallback for missing categories
+- [x] **Agent 3: Ranking Agent**
+  - [x] Implement weighted scoring formula (distance, rating, availability)
+  - [x] Log reasoning per provider
+- [x] **Agent 4: Booking Agent**
+  - [x] Generate unique booking IDs
+  - [x] Implement JSON flat-file write (`bookings.json`)
+- [x] **Agent 5: Followup Agent**
+  - [x] Calculate reminder times
+  - [x] Update database records with reminders
+- [x] Frontend Development
+  - [x] Leaflet.js map integration with OpenStreetMap
+  - [x] UI for multi-language input and agent logs
+- [x] E2E Testing
+  - [x] Verify API quota fallback handles gracefully

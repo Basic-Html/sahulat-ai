@@ -1,24 +1,33 @@
 {
-    "rewrites": [
+    "version": 2,
+    "routes": [
         {
-            "source": "/orchestrate",
-            "destination": "/api/index.py"
+            "src": "/orchestrate",
+            "dest": "/api/index.py"
         },
         {
-            "source": "/book-service",
-            "destination": "/api/index.py"
+            "src": "/book-service",
+            "dest": "/api/index.py"
         },
         {
-            "source": "/update-status",
-            "destination": "/api/index.py"
+            "src": "/update-status",
+            "dest": "/api/index.py"
         },
         {
-            "source": "/providers",
-            "destination": "/api/index.py"
+            "src": "/providers",
+            "dest": "/api/index.py"
         },
         {
-            "source": "/(.*)",
-            "destination": "/index.html"
+            "src": "/",
+            "dest": "/index.html"
+        },
+        {
+            "src": "/style.css",
+            "dest": "/frontend/style.css"
+        },
+        {
+            "src": "/app.js",
+            "dest": "/frontend/app.js"
         }
     ]
 }
